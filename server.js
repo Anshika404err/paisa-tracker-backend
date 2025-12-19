@@ -14,6 +14,7 @@ import mailroutes from './routes/sendEmail.js'
 import userroutes from './routes/user.js';
 import grouproutes from './routes/groups.js'
 import friendroutes from './routes/friends.js'
+import pingRoutes from './routes/ping.js'
 
 
 import bodyParser from 'body-parser'
@@ -37,6 +38,7 @@ app.use("/api/mail",mailroutes)
 app.use("/api/user",userroutes)  
 app.use("/api/group",grouproutes)
 app.use("/api/friend",friendroutes)
+app.use("/api/health", pingRoutes)
 
 
 // app.use("/api",signinwithgoogle)
