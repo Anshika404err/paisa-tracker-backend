@@ -1,11 +1,24 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-// import { Server } from "socket.io";
-import {connect} from "./db/db.js"
+import { connect } from "./db/db.js"
 import http from 'http'
-// import userRoutes from './routes/User.js';
-// import{ signup, signin } from './backend/controllers/auth.js';
+import bodyParser from 'body-parser'
+import cookieParser from "cookie-parser";
+import cors from "cors";
+
+// 1. Initialize App and Config FIRST
+const app = express();
+dotenv.config();
+
+// 2. CORS Configuration (Must be before routes)
+app.use(cors({
+  origin: 'https://paisa-tracker-frontend.vercel.app', // Ensure this matches your Vercel URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
+// 3. Import Routes
 import transroutes from './routes/transactions.js'
 import authroutes from './routes/auth.js';
 import savingroutes from './routes/savings.js';
@@ -16,65 +29,37 @@ import grouproutes from './routes/groups.js'
 import friendroutes from './routes/friends.js'
 import pingRoutes from './routes/ping.js'
 
-
-import bodyParser from 'body-parser'
-import cookieParser from "cookie-parser";
-import cors from "cors";
-// const server = http.createServer();
-// const io = new Server(server);
-const app = express();
-dotenv.config();
-
-//Middleware
-app.use(cors())
+// 4. Middleware
 app.use(cookieParser())
 app.use(express.json())
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use("/api/bills",billsRoutes)
-app.use("/api/transactions",transroutes)
-app.use("/api/savings",savingroutes)  
-app.use("/api/auth",authroutes)
-app.use("/api/mail",mailroutes) 
-app.use("/api/user",userroutes)  
-app.use("/api/group",grouproutes)
-app.use("/api/friend",friendroutes)
+
+// 5. Routes
+app.use("/api/bills", billsRoutes)
+app.use("/api/transactions", transroutes)
+app.use("/api/savings", savingroutes)  
+app.use("/api/auth", authroutes)
+app.use("/api/mail", mailroutes) 
+app.use("/api/user", userroutes)  
+app.use("/api/group", grouproutes)
+app.use("/api/friend", friendroutes)
 app.use("/api/health", pingRoutes)
 
-
-// app.use("/api",signinwithgoogle)
-// app.use("/api/auth/",signin)
-
-app.use((err,req,res,next)=>{
-    const status = err.status||500;
-    const message = err.message||"errorrrr";
+// 6. Error Handler
+app.use((err, req, res, next) => {
+    const status = err.status || 500;
+    const message = err.message || "Something went wrong";
     console.log(err);
     return res.status(status).json({
-        success:false,
+        success: false,
         status,
         message,
     })
 })
 
-// io.on('connection', (socket) => {
-//     console.log('A user connected');
-  
-//     // Listen for comments from clients
-//     socket.on('comment', (data) => {
-//       // Broadcast the comment to all connected clients
-//       io.emit('comment', data);
-//     });
-  
-//     socket.on('disconnect', () => {
-//       console.log('A user disconnected');
-//     });
-//   });
-  
-
-//server listens on port 3001
-const PORT=process.env.PORT||3001
-app.listen(PORT,()=>{
-    //connecting to database
-    connect()
-    //connecting to server
-    console.log("connected");
+// 7. Start Server
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => {
+    connect() // Database connection
+    console.log(`Server running on port ${PORT}`);
 })
