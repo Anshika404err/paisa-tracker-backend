@@ -6,9 +6,9 @@ import { googleAuth } from "../controllers/google.js";
 const router = express.Router();
 
 //Routes for auth api
-router.post("/signup",signup);
-router.post("/signin",signin);
-router.post("/signout",signout);
-router.post("/google",googleAuth);
+router.post("/signup", signup);
+router.post("/signin", signin);
+router.post("/signout", signout);
+router.post("/google", googleAuth);
 
 export default router;
