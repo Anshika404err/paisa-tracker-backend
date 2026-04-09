@@ -1,65 +1,75 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import { connect } from "./db/db.js"
-import http from 'http'
-import bodyParser from 'body-parser'
+import { connect } from "./db/db.js";
+import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
-// 1. Initialize App and Config FIRST
-const app = express();
+// 1. Init
 dotenv.config();
+const app = express();
 
-// 2. CORS Configuration (Must be before routes)
+// 2. Allowed Origins (IMPORTANT)
+const allowedOrigins = [
+  "http://localhost:3002",
+  "https://paisa-vasooli--tu96.vercel.app",
+  "https://paisa-tracker-frontend.vercel.app"
+];
+
+// 3. CORS Middleware (BEST PRACTICE)
 app.use(cors({
-  origin: 'https://paisa-tracker-frontend.vercel.app', // Ensure this matches your Vercel URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: function (origin, callback) {
+    // allow requests with no origin (like postman)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed"));
+    }
+  },
   credentials: true
 }));
 
-// 3. Import Routes
-import transroutes from './routes/transactions.js'
-import authroutes from './routes/auth.js';
-import savingroutes from './routes/savings.js';
-import billsRoutes from './routes/bills.js';
-import mailroutes from './routes/sendEmail.js'
-import userroutes from './routes/user.js';
-import grouproutes from './routes/groups.js'
-import friendroutes from './routes/friends.js'
-import pingRoutes from './routes/ping.js'
-
 // 4. Middleware
-app.use(cookieParser())
-app.use(express.json())
+app.use(cookieParser());
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // 5. Routes
-app.use("/api/bills", billsRoutes)
-app.use("/api/transactions", transroutes)
-app.use("/api/savings", savingroutes)  
-app.use("/api/auth", authroutes)
-app.use("/api/mail", mailroutes) 
-app.use("/api/user", userroutes)  
-app.use("/api/group", grouproutes)
-app.use("/api/friend", friendroutes)
-app.use("/api/health", pingRoutes)
+import transroutes from './routes/transactions.js';
+import authroutes from './routes/auth.js';
+import savingroutes from './routes/savings.js';
+import billsRoutes from './routes/bills.js';
+import mailroutes from './routes/sendEmail.js';
+import userroutes from './routes/user.js';
+import grouproutes from './routes/groups.js';
+import friendroutes from './routes/friends.js';
+import pingRoutes from './routes/ping.js';
+
+app.use("/api/bills", billsRoutes);
+app.use("/api/transactions", transroutes);
+app.use("/api/savings", savingroutes);
+app.use("/api/auth", authroutes);
+app.use("/api/mail", mailroutes);
+app.use("/api/user", userroutes);
+app.use("/api/group", grouproutes);
+app.use("/api/friend", friendroutes);
+app.use("/api/health", pingRoutes);
 
 // 6. Error Handler
 app.use((err, req, res, next) => {
-    const status = err.status || 500;
-    const message = err.message || "Something went wrong";
-    console.log(err);
-    return res.status(status).json({
-        success: false,
-        status,
-        message,
-    })
-})
+  console.error(err);
+  return res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Something went wrong"
+  });
+});
 
 // 7. Start Server
-const PORT = process.env.PORT || 3001
-app.listen(PORT, () => {
-    connect() // Database connection
-    console.log(`Server running on port ${PORT}`);
-})
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, async () => {
+  await connect();
+  console.log(`Server running on port ${PORT}`);
+});
