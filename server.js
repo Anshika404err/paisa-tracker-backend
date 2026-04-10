@@ -1,5 +1,4 @@
 import express from "express";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { connect } from "./db/db.js";
 import bodyParser from "body-parser";
@@ -10,26 +9,27 @@ import cors from "cors";
 dotenv.config();
 const app = express();
 
-// 2. Allowed Origins (IMPORTANT)
+// 2. Allowed Origins
 const allowedOrigins = [
+  "http://localhost:3000",
   "http://localhost:3002",
   "https://paisa-vasooli--tu96.vercel.app",
   "https://paisa-tracker-frontend.vercel.app"
 ];
 
-// 3. CORS Middleware (BEST PRACTICE)
+// 3. ✅ SINGLE cors middleware — no duplicate
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin (like postman)
-    if (!origin) return callback(null, true);
-
+    if (!origin) return callback(null, true); // allow Postman, mobile apps etc.
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("CORS not allowed"));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 // 4. Middleware
@@ -69,7 +69,14 @@ app.use((err, req, res, next) => {
 
 // 7. Start Server
 const PORT = process.env.PORT || 3001;
+
 app.listen(PORT, async () => {
-  await connect();
-  console.log(`Server running on port ${PORT}`);
+  try {
+    await connect();
+    console.log(`Server running on port ${PORT}`);
+    console.log("✅ Database Connected Successfully");
+  } catch (error) {
+    console.error("❌ Database Connection Failed:");
+    console.error(error);
+  }
 });
